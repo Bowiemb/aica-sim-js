@@ -1,0 +1,103 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>AICA Simulation</title>
+		<link rel="stylesheet" type="text/css" href="css/style.css">
+		<script type="text/javascript" src="scripts/simulation.js"></script>
+	</head>
+	<body>
+		<div id="page-container">
+			<canvas id="sim-canvas" width="449" height="449"></canvas>
+			<div id="controls">
+				<div class="vcenter">
+				<div class="button-group">		
+					<label for="j1">J1:</label>			
+					<button onclick="decrement('j1')">-</button>
+					<input value="0" id="j1" class="num-input" onchange="verify('j1')" type="text">
+					<button onclick="increment('j1')">+</button>
+				</div>
+				<div class="button-group">	
+					<label for="j2">J2:</label>
+					<button onclick="decrement('j2')">-</button>
+					<input value="-0.1" id="j2" class="num-input" onchange="verify('j2')" type="text">
+					<button onclick="increment('j2')">+</button>
+				</div>
+				<div class="button-group">	
+					<label for="h">h:</label>	
+					<button onclick="decrement('h')">-</button>
+					<input value="0" id="h" class="num-input" onchange="verify('h')" type="text">
+					<button onclick="increment('h')">+</button>
+				</div>
+				<div class="button-group">	
+					<label for="r1">R1:</label>	
+					<button onclick="decrement('r1')">-</button>
+					<input value="9" id="r1" class="num-input" onchange="verify('r1')" type="text">
+					<button onclick="increment('r1')">+</button>
+				</div>
+				<div class="button-group">
+					<label for="r2">R2:</label>	
+					<button onclick="decrement('r2')">-</button>
+					<input value="12" id="r2" class="num-input" onchange="verify('r2')" type="text">
+					<button onclick="increment('r2')">+</button>
+				</div>
+				<input id="submit" value="Simulate" onclick="simulate()" type="submit">
+				</div>
+			</div>
+		</div>
+
+		<button id="help" onClick="toggleHelp()">?</button>
+		<div id="help-menu">
+			<div id="help-text">
+				<p>	This page simulates an activation/inhibition cellular automata. The simulation
+					consists of a 30x30 grid of cells, each of which is either in an active or
+					inactive state. The simulation assumes the grid is a torus, which means cells
+					on the bottom of the grid are adjacent to cells on the top of the grid, and
+					cells on the left side of the grid are adjacent to cells on the right. As you
+					run the simulation, cells are updated asynchronously (one at a time) according
+					to the states of other cells around it, as well as the amount of activation and
+					inhibition chemicals present.
+				</p>
+				<ul>Parameters:<br>
+					<li>J1 range[0, 1]: Controls the spread rate of the activator chemical. Higher values in 
+						relation to J2 result in faster spread of one of the states (active or 
+						inactive). Lower values result in a more equal mix of active and inactive cells.
+					</li>
+					<li>J2 range[-1, 0]: Controls the spread rate of the inhibitor chemical. Higher negative
+						values in relation to J1 result in a more equal mix of active and inactive
+						cells. Lower values result in faster spread of one of the states.
+					</li>
+					<li>h range(-&#x221e;, &#x221e;): Acts as a bias. Negative values of h result in a higher percentage of 
+						inactive cells, and higher values result in higher percentage of active cells.
+					</li>
+					<li>R1 range[0, 15]: Controls the area of influence of the activator chemical. Larger values of
+						R1 result in qualitatively larger emergent structures (stripes, etc.).
+					</li>
+					<li>R2 range[R1, 15]: Controls the area of influence of the inhibitor chemical. Larger values of
+						R2 in relation to R1 result in qualitatively larger emergent structures.
+					</li>
+				</ul>
+				<ul>Some parameter combinations to try:<br>
+					<li><button class="help-active param" onClick="setParameters(1, 0, 0, 1, 2)">
+						J1 = 1, J2 = 0, h = 0, R1 = 1, R2 = 2
+					</button></li>
+					<li><button class="help-active param" onClick="setParameters(0, -0.1, 0, 9, 12)">
+						J1 = 0, J2 = -0.1, h = 0, R1 = 9, R2 = 12
+					</button></li>
+					<li><button class="help-active param" onClick="setParameters(0, -0.1, 0, 10, 15)">
+						J1 = 0, J2 = -0.1, h = 0, R1 = 10, R2 = 15
+					</button></li>
+					<li><button class="help-active param" onClick="setParameters(0, -0.1, 6, 9, 12)">
+						J1 = 0, J2 = -0.1, h = 6, R1 = 9, R2 = 12
+					</button></li>
+					<li><button class="help-active param" onClick="setParameters(1, -0.1, -1, 3, 5)">
+						J1 = 1, J2 = -0.1, h = -1, R1 = 3, R2 = 5
+					</button></li>
+				</ul>
+			</div>
+		</div>
+		
+		<script>
+			simulate();
+		</script>
+	</body>
+</html>
