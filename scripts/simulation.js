@@ -233,8 +233,7 @@ function verify(input){
 			verify("r2");
 		}
 		else if(input === "r2"){
-			if(inputval >= document.getElementById("r1").value 
-				&& inputval <= 15)
+			if(inputval >= parseFloat(document.getElementById("r1").value) && inputval <= 15 && inputval >= 0)
 				numinput.className = "num-input valid-input";
 			else
 				numinput.className = "num-input invalid-input";
