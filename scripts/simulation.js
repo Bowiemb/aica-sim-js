@@ -8,8 +8,56 @@ var sim;
  *
  */
 
-var done;
-var numExperiments = 0;
+var done = false;
+var __i = 0;
+var numExp = -1;
+var oj1 = 0;
+var oj2 = 0;
+var oh = 0;
+var or1 = 0;
+var or2 = 0;
+var download = false;
+var doNext = false;
+var _params = [
+  [1,2,0],
+  [1,5,-4],
+  [1,5,-2],
+  [1,5,0],
+  [1,5,2],
+  [1,5,4],
+  [1,9,-6],
+  [1,9,-3],
+  [1,9,0],
+  [1,9,3],
+  [1,9,6],
+  [1,14,-6],
+  [1,14,3],
+  [1,16,6],
+  [3,5,-1],
+  [3,5,0],
+  [3,5,1],
+  [3,9,-6],
+  [3,9,-3],
+  [3,9,0],
+  [3,9,3],
+  [3,9,6],
+  [3,14,-6],
+  [3,14,-3],
+  [3,14,0],
+  [3,14,6],
+  [7,9,-1],
+  [7,9,0],
+  [7,9,1],
+  [7,14,-3],
+  [7,14,0],
+  [7,14,3],
+  [12,14,-2],
+  [12,14,0],
+  [7,14,3],
+  [12,14,-2],
+  [12,14,0],
+  [12,14,2]
+]
 
 function isDone() {
  done = true;
@@ -124,11 +172,37 @@ function AICASim(j1, j2, h, r1, r2){
     this.updateList.splice(randomIndex, 1);
   }
 
+  this.doCalcs = function() {
+    var data = [];
+    var temp = [];
+    temp.push("H(s)");
+    var hs; 
+  //  clearInterval(sim.timer);
+    done = true;
+
+    hs = this.calculateEntropy(); 
+    temp.push(hs);
+    data.push(temp);
+
+    temp = this.calculateCorrelation();
+    data.push(temp);
+
+    temp = this.calcJointEntropyAndMutInfo(hs);
+    data.push(temp[0]);
+    data.push(temp[1]);
+    download = true;
+
+    this.download_csv(data);
+
+  }
+
 
   this.simulate = function(){
     this.initUpdateList();
 
     this.timer = setInterval(updateCallback, 12);
+    if (done && !download)
+        sim.doCalcs(); 
   }
 
   this.drawCell = function(i, j){
@@ -160,30 +234,11 @@ function AICASim(j1, j2, h, r1, r2){
   ////////////////////////////////
 
 
-  this.doCalcs = function() {
-    var data = [];
-    var temp = [];
-    temp.push("H(s)");
-    var hs; 
-    clearInterval(sim.timer);
-
-    hs = this.calculateEntropy(); 
-    temp.push(hs);
-    data.push(temp);
-
-    temp = this.calculateCorrelation();
-    data.push(temp);
-
-    temp = this.calcJointEntropyAndMutInfo(hs);
-    data.push(temp[0]);
-    data.push(temp[1]);
-
-    this.download_csv(data);
-
-  }
 
   this.download_csv = function(data) {
-    var csv = 'Experiment,' + numExperiments + ',\n';
+    var csv = 'Experiment,' + numExp + ',\n' + 
+      'Params:,' + this.j1 + ',' + this.j2 + ',' + this.h + ',' + this.r1 + ',' + 
+      this.r2 + ',\n';
     data.forEach(function(row) {
       csv += row.join(',');
       csv += "\n";
@@ -192,8 +247,10 @@ function AICASim(j1, j2, h, r1, r2){
        var hiddenElement = document.createElement('a');
        hiddenElement.href = 'data:test/csv;charset=utf-8,' + encodeURI(csv);
        hiddenElement.target = '_blank';
-       hiddenElement.download = 'experiment_data.csv';
+       hiddenElement.download = 'experiment_data' + numExp + '.csv';
        hiddenElement.click();
+       doNext = true;
+       main_simulate();
 
   }
 
@@ -251,10 +308,10 @@ function AICASim(j1, j2, h, r1, r2){
     console.log(pp1);
     console.log(pm1);
     var entropy;
-    if (pp1 == 0)
-      entropy = -(Math.log(pm1));
-    else if (pm1 == 0)
-      entropy = -(Math.log(pp1));
+    if (pp1 == 0 && pm1 == 1)
+      entropy = 1;
+    else if (pm1 == 0 && pp1 == 1)
+      entropy = 1;
     else
       entropy = -(pp1*(Math.log(pp1)) + (pm1*Math.log(pm1)));  
 
@@ -297,22 +354,19 @@ function AICASim(j1, j2, h, r1, r2){
           }
         }
       }
+      var jointEntropy;
       if (l > 0) {
           Ppp = (2 / (30*30 * 4 * l))*sumPosBeta;
           Pmm = (2 / (30*30 * 4 * l))*sumNegBeta;
           Ppm = 1 - Ppp - Pmm;
       }
       else {
-        // this is probably incorrect
-        Ppp = 0;
-        Pmm = 0;
-        Ppm = 1;
+        jointEntropy = hs;
       }
       
-        var jointEntropy;
-
-        if (Ppp == 0 && Pmm == 0) {
-          jointEntropy = -(Math.log(Ppm));
+if (l > 0){
+        if ( (Ppp == 0 && Pmm == 0) || (Ppp == 0 && Ppm == 0) || (Pmm == 0 && Ppm == 0)) {
+          jointEntropy = 1;
         }
         else if (Ppp == 0 && Pmm != 1) {
           jointEntropy = -(Pmm*Math.log(Pmm) + Ppm*Math.log(Ppm));
@@ -329,6 +383,7 @@ function AICASim(j1, j2, h, r1, r2){
           Ppm += .00000000000000001;
           jointEntropy = -(Ppp*Math.log(Ppp) + Pmm*Math.log(Pmm) + Ppm*Math.log(Ppm));
         }
+}
         console.log("je: " + jointEntropy);
 
         // mutual info
@@ -358,7 +413,7 @@ function AICASim(j1, j2, h, r1, r2){
  *    main function - this is called when the user clicks "simulate"
  *
  */
-function simulate(){	
+function main_simulate(){	
   var j1 = parseFloat(document.getElementById("j1").value);
   var j2 = parseFloat(document.getElementById("j2").value);
   var h = parseFloat(document.getElementById("h").value);
@@ -368,32 +423,45 @@ function simulate(){
   if(isNaN(j1) || isNaN(j2) || isNaN(h) || isNaN(r1) || isNaN(r2)){
     return;
   }
+  
   done = false;
-  numExperiments++;
+  download = false;
+  
+  if (j1 != oj1 || j2 != oj2 || h != oh || r1 != or1 || r2 != or2)
+      //numExp++;
+  //console.log(numExperiments);
+  oj1 = j1;
+  oj2 = j2;
+  oh = h;
+  or1 = r1;
+  or2 = r2;
+  
+  numExp++;
 
-  sim  = new AICASim(j1, j2, h, r1, r2);
-  sim.foo();
-  sim.initCA();
-  sim.drawCA();
-  sim.simulate();
-  console.log("under simulate");
+      sim  = new AICASim(1, -0.1, _params[__i][2], _params[__i][0], _params[__i][1]);
+      __i++;
+      sim.initCA();
+      sim.drawCA();
+      sim.simulate();
+  }
   //sim.doCalcs();
   // TODO
   // sim.perform_calculations()
   // sim.save_data()
   // download data
-}
 
 function updateCallback(){
   if(done)
   {
        clearInterval(sim.timer); 
-       sim.doCalcs(); 
-       
+       if (!download)
+         sim.doCalcs(); 
   }
   // If all cells have updated and the CA is stable, stop the simulation
   else if(sim.numUpdated === 0 && sim.updateList.length === 0){
     clearInterval(sim.timer);
+    if (!download)
+         sim.doCalcs(); 
   }
 
   // If all cells have updated, but the CA is not stable, update all cells again
